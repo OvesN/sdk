@@ -14,8 +14,6 @@
   <PropertyGroup>
     <!-- RepoRoot is what the targets use for glob expansion and to locate ConditionalTests.props -->
     <RepoRoot>$(TestRepoRoot)</RepoRoot>
-    <!-- Unescape %3B back to ; since MSBuild's CLI parser splits on raw semicolons -->
-    <SkippedTestScopes>$([MSBuild]::Unescape('$(SkippedTestScopes)'))</SkippedTestScopes>
   </PropertyGroup>
 
   <!-- Import the REAL removal targets from the repo (single source of truth).

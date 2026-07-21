@@ -185,9 +185,9 @@ public class RemoveSkippedConditionalTestProjectsTests : SdkTest
         // Use forward slash to avoid the trailing-backslash-before-quote issue on Windows.
         var testRepoRoot = env.Root.TrimEnd(Path.DirectorySeparatorChar) + "/";
 
-        // Escape semicolons in SkippedTestScopes with %3B for the command line.
-        // ConditionalTestRemoval.proj unescapes them via $([MSBuild]::Unescape(...)).
-        var escapedScopes = skippedScopes.Replace(";", "%3B");
+        // Use | as separator for SkippedTestScopes on the command line (mirrors what the
+        // evaluator script does for the pipeline variable). The targets normalize | back to ;.
+        var escapedScopes = skippedScopes.Replace(";", "|");
 
         var args = $"msbuild \"{_testProjPath}\" /t:VerifyRemoval " +
                    $"/p:TestRepoRoot={testRepoRoot} " +
