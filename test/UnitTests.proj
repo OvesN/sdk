@@ -28,7 +28,7 @@
     <!-- Don't run MSI installation tests in Helix / CI -->
     <SDKCustomTestProject Remove="dotnet-MsiInstallation.Tests\**\*" />
 
-    <!-- dotnet-format unit tests are run under the DOTNET_FORMAT pipeline section. -->
+    <!-- dotnet-format unit tests need fixes tracked with https://github.com/dotnet/sdk/issues/54249. -->
     <SDKCustomTestProject Remove="dotnet-format.UnitTests\dotnet-format.UnitTests.csproj" />
 
     <!-- dotnet-format integration tests: one Helix work item per test class.

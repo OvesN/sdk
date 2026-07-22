@@ -17,6 +17,11 @@ public abstract class FormatIntegrationTestBase : SdkTest
 {
     private static readonly TimeSpan ProcessTimeout = TimeSpan.FromMinutes(30);
 
+    // Keyed by concrete type so each derived class gets its own entry.
+    // MSTest creates a new instance per test method, so clone+restore would otherwise
+    // run once per test method rather than once per class per process.
+    private static readonly Dictionary<Type, string> s_initializedRepoPaths = new();
+
     private string? _repoPath;
 
     private string ParentDotNetPath => SdkTestContext.Current.ToolsetUnderTest.DotNetHostPath;
@@ -36,6 +41,13 @@ public abstract class FormatIntegrationTestBase : SdkTest
     [TestInitialize]
     public void TestInitialize()
     {
+        if (s_initializedRepoPaths.TryGetValue(GetType(), out var cachedPath))
+        {
+            _repoPath = cachedPath;
+            Log.WriteLine($"Reusing initialized repo for {RepoName} at {_repoPath}");
+            return;
+        }
+
         _repoPath = Path.Combine(Path.GetTempPath(), "dotnet-format-tests", RepoName);
 
         if (IsAlreadyAtCorrectSha())
@@ -66,6 +78,8 @@ public abstract class FormatIntegrationTestBase : SdkTest
         RemoveGlobalJsonSdkSection();
 
         Restore();
+
+        s_initializedRepoPaths[GetType()] = _repoPath;
     }
 
     [TestMethod]
