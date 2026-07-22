@@ -5,6 +5,9 @@
   Usage:
     dotnet msbuild ConditionalTestRemoval.proj /p:SkippedTestScopes=<value> /p:TestRepoRoot=<path> /p:RealRepoRoot=<path> /p:TestProjectItemsFile=<path> /t:VerifyRemoval
 
+    <value> is a single scope name, "__all__", or multiple scopes separated by '|' (e.g.
+    "FeatureA|FeatureB"). Use '|', not ';': a raw ';' is split by MSBuild's /p: parser.
+
   This project simulates what UnitTests.proj does: imports ConditionalTests.props and
   ConditionalTests.targets, defines SDKCustomTestProject items, runs the removal target,
   and prints what remains.
