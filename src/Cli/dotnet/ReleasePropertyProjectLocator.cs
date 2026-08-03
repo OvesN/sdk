@@ -275,6 +275,8 @@ internal sealed class ReleasePropertyProjectLocator(
                     EvaluationContext.SharingPolicy.SharedSDKCache,
                 nameof(EvaluationContext.SharingPolicy.Shared) =>
                     EvaluationContext.SharingPolicy.Shared,
+                nameof(EvaluationContext.SharingPolicy.Isolated) =>
+                    EvaluationContext.SharingPolicy.Isolated,
                 _ => EvaluationContext.SharingPolicy.Shared,
             };
 
