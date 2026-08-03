@@ -28,6 +28,9 @@ internal sealed class ReleasePropertyProjectLocator(
     string propertyToCheck,
     ReleasePropertyProjectLocator.DependentCommandOptions commandOptions)
 {
+    private const string EvaluationContextPolicyEnvironmentVariable = "DOTNET_CLI_RELEASE_PROPERTY_EVALUATION_CONTEXT_POLICY";
+    private const string EvaluationStageEnvironmentVariable = "DOTNET_CLI_RELEASE_PROPERTY_EVALUATION_STAGE";
+
     public readonly struct DependentCommandOptions(IEnumerable<string>? slnOrProjectArgs, string? configOption = null, string? frameworkOption = null)
     {
         public readonly IEnumerable<string> SlnOrProjectArgs = slnOrProjectArgs ?? [];
@@ -64,8 +67,7 @@ internal sealed class ReleasePropertyProjectLocator(
         if (commandOptions.ConfigurationOption != null || globalProperties is not null && globalProperties.ContainsKey(MSBuildPropertyNames.CONFIGURATION))
             return new Dictionary<string, string>(1, StringComparer.OrdinalIgnoreCase) { [EnvironmentVariableNames.DISABLE_PUBLISH_AND_PACK_RELEASE] = "true" }.AsReadOnly(); // Don't throw error if publish* conflicts but global config specified.
 
-        // The Shared policy is chosen because release-property discovery is short-lived and the context is discarded before the subsequent MSBuild invocation.
-        EvaluationContext evaluationContext = EvaluationContext.Create(EvaluationContext.SharingPolicy.Shared);
+        EvaluationContext evaluationContext = CreateEvaluationContext();
 
         // Determine the project being acted upon
         ProjectInstance? project = GetTargetedProject(globalProperties, evaluationContext);
@@ -253,7 +255,7 @@ internal sealed class ReleasePropertyProjectLocator(
             {
                 GlobalProperties = globalProperties,
                 ToolsVersion = "Current",
-                EvaluationStage = ProjectEvaluationStage.Properties,
+                EvaluationStage = GetEvaluationStage(),
                 EvaluationContext = evaluationContext,
             });
         }
@@ -263,6 +265,29 @@ internal sealed class ReleasePropertyProjectLocator(
         }
         return null;
     }
+
+    private static EvaluationContext CreateEvaluationContext()
+    {
+        EvaluationContext.SharingPolicy sharingPolicy =
+            Environment.GetEnvironmentVariable(EvaluationContextPolicyEnvironmentVariable) switch
+            {
+                nameof(EvaluationContext.SharingPolicy.SharedSDKCache) =>
+                    EvaluationContext.SharingPolicy.SharedSDKCache,
+                nameof(EvaluationContext.SharingPolicy.Shared) =>
+                    EvaluationContext.SharingPolicy.Shared,
+                _ => EvaluationContext.SharingPolicy.Shared,
+            };
+
+        return EvaluationContext.Create(sharingPolicy);
+    }
+
+    private static ProjectEvaluationStage GetEvaluationStage() =>
+        string.Equals(
+            Environment.GetEnvironmentVariable(EvaluationStageEnvironmentVariable),
+            nameof(ProjectEvaluationStage.Full),
+            StringComparison.Ordinal)
+                ? ProjectEvaluationStage.Full
+                : ProjectEvaluationStage.Properties;
 
     /// <returns>Returns true if the path exists and is a project file type.</returns>
     private static bool IsValidProjectFilePath(string path)
