@@ -242,14 +242,12 @@ internal sealed class ReleasePropertyProjectLocator(
     {
         try
         {
-            // Only evaluated property values (PublishRelease/PackRelease and FullPath) are read from the
-            // returned instance, never items or targets, so stop after the Properties pass instead of
-            // running a full evaluation (which additionally globs items and registers targets).
+            // Benchmark baseline: use the previous full evaluation with the default isolated context.
             return ProjectInstance.FromFile(projectPath, new ProjectOptions
             {
                 GlobalProperties = globalProperties,
                 ToolsVersion = "Current",
-                EvaluationStage = ProjectEvaluationStage.Properties,
+                EvaluationStage = ProjectEvaluationStage.Full,
             });
         }
         catch (Exception e) // Catch failed file access, or invalid project files that cause errors when read into memory,
